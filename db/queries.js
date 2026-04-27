@@ -199,7 +199,17 @@ async function listProjectTasks(db, projectId, status) {
  */
 async function createTask(db, taskData) {
   // TODO: implement
-  throw new Error('createTask not implemented');
+
+   return await db.collection("tasks").insertOne({
+    ownerId: new ObjectId(taskData.ownerId),
+    projectId: new ObjectId(taskData.projectId),
+    title: taskData.title,
+    priority: taskData.priority || 1,
+    tags: taskData.tags || [],
+    subtasks: taskData.subtasks || [],
+    status: "todo",
+    createdAt: new Date(),
+  });
 }
 
 /**
