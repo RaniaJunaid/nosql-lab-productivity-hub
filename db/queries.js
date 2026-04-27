@@ -361,7 +361,16 @@ async function deleteTask(db, taskId) {
  */
 async function searchNotes(db, ownerId, tags, projectId) {
   // TODO: implement
-  throw new Error('searchNotes not implemented');
+  const filter = {
+    ownerId: new ObjectId(ownerId),
+    tags: { $in: tags },
+  };
+  if (projectId) filter.projectId = new ObjectId(projectId);
+  return await db
+    .collection("notes")
+    .find(filter)
+    .sort({ createdAt: -1 })
+    .toArray();
 }
 
 /**
