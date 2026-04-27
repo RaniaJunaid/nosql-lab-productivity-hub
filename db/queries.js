@@ -112,7 +112,13 @@ async function listUserProjects(db, ownerId) {
  */
 async function createProject(db, projectData) {
   // TODO: implement
-  throw new Error('createProject not implemented');
+  return await db.collection("projects").insertOne({
+    ownerId: new ObjectId(projectData.ownerId),
+    name: projectData.name,
+    description: projectData.description || "",
+    archived: false,
+    createdAt: new Date(),
+  });
 }
 
 /**
