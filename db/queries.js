@@ -138,7 +138,13 @@ async function createProject(db, projectData) {
  */
 async function archiveProject(db, projectId) {
   // TODO: implement
-  throw new Error('archiveProject not implemented');
+
+  return await db
+    .collection("projects")
+    .updateOne(
+      { _id: new ObjectId(projectId) },
+      { $set: { archived: true } }
+    );
 }
 
 /**
