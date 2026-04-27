@@ -278,7 +278,12 @@ async function addTaskTag(db, taskId, tag) {
  */
 async function removeTaskTag(db, taskId, tag) {
   // TODO: implement
-  throw new Error('removeTaskTag not implemented');
+  return await db
+    .collection("tasks")
+    .updateOne(
+      { _id: new ObjectId(taskId) },
+      { $pull: { tags: tag } }
+    );
 }
 
 /**
