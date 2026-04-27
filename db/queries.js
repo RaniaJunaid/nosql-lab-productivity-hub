@@ -45,15 +45,12 @@ const { ObjectId } = require('mongodb');
  */
 async function signupUser(db, userData) {
   // TODO: implement
-  const existing = await db.collection("users").findOne({ email });
-  if (existing) throw new Error("Email already in use");
-  return await db.collection("users").insertOne({
-    name,
-    email,
-    passwordHash,
+ return await db.collection("users").insertOne({
+    name: userData.name,
+    email: userData.email,
+    passwordHash: userData.passwordHash,
     createdAt: new Date(),
   });
-  throw new Error('signupUser not implemented');
 }
 
 /**
@@ -73,7 +70,7 @@ async function signupUser(db, userData) {
  */
 async function loginFindUser(db, email) {
   // TODO: implement
-  throw new Error('loginFindUser not implemented');
+  return await db.collection("users").findOne({email:email});
 }
 
 /**
@@ -347,7 +344,42 @@ async function searchNotes(db, ownerId, tags, projectId) {
  */
 async function projectTaskSummary(db, ownerId) {
   // TODO: implement
-  throw new Error('projectTaskSummary not implemented');
+
+  return await db
+    .collection("tasks")
+    .aggregate([
+      { $match: { ownerId: new ObjectId(ownerId) } },
+      {
+        $group: {
+          _id: "$projectId",
+          todo:       { $sum: { $cond: [{ $eq: ["$status", "todo"] }, 1, 0] } },
+          inProgress: { $sum: { $cond: [{ $eq: ["$status", "in-progress"] }, 1, 0] } },
+          done:       { $sum: { $cond: [{ $eq: ["$status", "done"] }, 1, 0] } },
+          total:      { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: "projects",
+          localField: "_id",
+          foreignField: "_id",
+          as: "project",
+        },
+      },
+      { $unwind: "$project" },
+      {
+        $project: {
+          _id: 1,
+          projectName: "$project.name",
+          todo: 1,
+          inProgress: 1,
+          done: 1,
+          total: 1,
+        },
+      },
+    ])
+    .toArray();
+
 }
 
 /**
