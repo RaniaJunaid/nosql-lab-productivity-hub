@@ -1,67 +1,76 @@
-# Schema Design — Personal Productivity Hub
+# Schema Design
 
-> Fill in every section below. Keep answers concise.
+## Collections
 
----
+### 1. users
+Each document represents one user of the app.
 
-## 1. Collections Overview
+**Fields:**
+- `_id`: ObjectId (auto-generated)
+- `name`: String
+- `email`: String (unique)
+- `passwordHash`: String
+- `createdAt`: Date
 
-Briefly describe each collection (1–2 sentences each):
-
-- **users** —
-- **projects** —
-- **tasks** —
-- **notes** —
-
----
-
-## 2. Document Shapes
-
-For each collection, write the document shape (field name + type + required/optional):
-
-### users
-```
-{
-  _id: ObjectId,
-  email: string (required, unique),
-  passwordHash: string (required),
-  name: string (required),
-  createdAt: Date (required)
-}
-```
-
-### projects
-```
-TODO
-```
-
-### tasks
-```
-TODO
-```
-
-### notes
-```
-TODO
-```
+**Embed vs Reference:** Nothing is embedded. Projects and notes reference the user via `userId`.
 
 ---
 
-## 3. Embed vs Reference — Decisions
+### 2. projects
+Each document is a project owned by a user.
 
-For each relationship, state whether you embedded or referenced, and **why** (one sentence):
+**Fields:**
+- `_id`: ObjectId
+- `userId`: ObjectId (reference to users)
+- `name`: String
+- `description`: String
+- `archived`: Boolean (default: false)
+- `createdAt`: Date
 
-| Relationship                       | Embed or Reference? | Why? |
-|-----------------------------------|---------------------|------|
-| Subtasks inside a task            |                     |      |
-| Tags on a task                    |                     |      |
-| Project → Task ownership          |                     |      |
-| Note → optional Project link      |                     |      |
+**Embed vs Reference:** Tasks are NOT embedded here — they are a separate collection referencing `projectId`. Tasks are queried independently by status and priority, so they need their own collection.
 
 ---
 
-## 4. Schema Flexibility Example
+### 3. tasks
+Each task belongs to a project and contains embedded subtasks and tags.
 
-Name one field that exists on **some** documents but not **all** in the same collection. Explain why this is acceptable (or even useful) in MongoDB.
+**Fields:**
+- `_id`: ObjectId
+- `projectId`: ObjectId (reference to projects)
+- `title`: String
+- `status`: String — "todo" | "in-progress" | "done"
+- `priority`: Number (1 = high, 3 = low)
+- `tags`: Array of Strings (embedded)
+- `subtasks`: Array of objects (embedded)
+  - `title`: String
+  - `done`: Boolean
+- `createdAt`: Date
+- `dueDate`: Date *(schema flexibility — only present on some tasks)*
 
-> _Your answer here._
+**Embed vs Reference:**
+- **subtasks** are embedded because they are owned by the task and always read with it.
+- **tags** are embedded as a simple string array.
+- **projectId** is a reference because projects are queried independently.
+
+---
+
+### 4. notes
+Each note can be standalone or attached to a project.
+
+**Fields:**
+- `_id`: ObjectId
+- `userId`: ObjectId (reference to users)
+- `projectId`: ObjectId or null (optional reference to projects)
+- `title`: String
+- `body`: String
+- `tags`: Array of Strings (embedded)
+- `createdAt`: Date
+- `pinned`: Boolean *(schema flexibility — only present on some notes)*
+
+**Embed vs Reference:** Notes reference users and optionally projects. Tags are embedded since they are simple strings used only for filtering.
+
+---
+
+## Schema Flexibility Example
+
+The `dueDate` field on tasks and the `pinned` field on notes are only present on **some** documents. MongoDB allows this without any schema changes — documents in the same collection do not need identical fields.
