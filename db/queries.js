@@ -252,7 +252,12 @@ async function updateTaskStatus(db, taskId, newStatus) {
  */
 async function addTaskTag(db, taskId, tag) {
   // TODO: implement
-  throw new Error('addTaskTag not implemented');
+  return await db
+    .collection("tasks")
+    .updateOne(
+      { _id: new ObjectId(taskId) },
+      { $addToSet: { tags: tag } }
+    );
 }
 
 /**
